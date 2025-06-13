@@ -1,0 +1,33 @@
+name: Deploy with Kustomize
+
+on:
+  push:
+    branches:
+      - main
+      - master
+  pull_request:
+    branches:
+      - main
+      - master
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    env:
+      KUBE_CONFIG_DATA: ${{ secrets.KUBE_CONFIG_DATA }}
+    strategy:
+      matrix:
+        environment: [dev, staging, prod]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Set up Kustomize
+        uses: imranismail/setup-kustomize@v2
+      - name: Set up kubectl
+        uses: azure/setup-kubectl@v3
+      - name: Decode and configure kubeconfig
+        run: |
+          echo "$KUBE_CONFIG_DATA" | base64 -d > $HOME/.kube/config
+      - name: Deploy to ${{ matrix.environment }}
+        run: |
+          kustomize build overlays/${{ matrix.environment }} | kubectl apply -f -

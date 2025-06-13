@@ -1,0 +1,10 @@
+# Ignore Kubernetes secrets and local files
+*.env
+*.secret
+*.bak
+*.tmp
+.DS_Store
+node_modules/
+__pycache__/
+.kube/
+*.log

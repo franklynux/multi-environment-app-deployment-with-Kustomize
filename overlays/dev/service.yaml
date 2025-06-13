@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: webapp-service
+spec:
+  selector:
+    app: webapp
+  ports:
+    - name: dev-port
+      protocol: TCP
+      port: 3002 # Port for development
+      targetPort: 3002 # Default port for development
+  type: LoadBalancer

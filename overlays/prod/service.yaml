@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: webapp-service
+spec:
+  selector:
+    app: webapp
+  ports:
+    - name: prod-port
+      protocol: TCP
+      port: 3001 # Port for production
+      targetPort: 3001
+  type: LoadBalancer
+  # Note: The targetPort should match the containerPort in the deployment.

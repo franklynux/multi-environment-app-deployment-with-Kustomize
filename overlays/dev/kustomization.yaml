@@ -1,0 +1,30 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+# This is the development overlay for the web application.
+resources:
+  - ../../base
+  
+nameSuffix: -dev
+
+patches:
+  - path: patch.yaml
+  - path: service.yaml
+
+configMapGenerator:
+  - name: webapp-config
+    behavior: merge
+    literals:
+      - APP_MODE=development
+      - APP_VERSION=1.0.0
+      - LOG_LEVEL=debug
+      - FEATURE_FLAG=false
+secretGenerator:
+  - name: webapp-secret
+    behavior: merge
+    literals:
+      - DB_PASSWORD=devchangeme
+      - API_KEY=devchangeme
+    type: Opaque
+
+transformers:
+  - labels-transformer.yaml

@@ -1,0 +1,11 @@
+apiVersion: builtin
+kind: LabelTransformer
+metadata:
+  name: add-common-labels
+labels:
+  app.kubernetes.io/managed-by: kustomize
+  project: kustomize-project
+  environment: production
+fieldSpecs:
+  - path: metadata/labels
+    create: true
