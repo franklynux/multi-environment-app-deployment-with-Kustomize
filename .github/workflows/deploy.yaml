@@ -1,33 +1,27 @@
-name: Deploy with Kustomize
+name: Deploy to Kubernetes with Kustomize
+# This GitHub Actions workflow deploys a Kubernetes application using Kustomize.
 
 on:
   push:
-    branches:
-      - main
-      - master
-  pull_request:
-    branches:
-      - main
-      - master
+    branches: [main]
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    env:
-      KUBE_CONFIG_DATA: ${{ secrets.KUBE_CONFIG_DATA }}
-    strategy:
-      matrix:
-        environment: [dev, staging, prod]
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v2
+      
       - name: Set up Kustomize
-        uses: imranismail/setup-kustomize@v2
+        uses: imranismail/setup-kustomize@v1
+        
       - name: Set up kubectl
-        uses: azure/setup-kubectl@v3
-      - name: Decode and configure kubeconfig
+        uses: azure/setup-kubectl@v1
+        
+      - name: Configure kubectl
         run: |
-          echo "$KUBE_CONFIG_DATA" | base64 -d > $HOME/.kube/config
-      - name: Deploy to ${{ matrix.environment }}
+          echo "${{ secrets.KUBE_CONFIG_DATA }}" | base64 -d > /tmp/kubeconfig
+          export KUBECONFIG=/tmp/kubeconfig
+          
+      - name: Deploy to environment
         run: |
-          kustomize build overlays/${{ matrix.environment }} | kubectl apply -f -
+          kustomize build overlays/dev | kubectl apply -f -
