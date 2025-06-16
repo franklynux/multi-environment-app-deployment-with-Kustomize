@@ -5,6 +5,8 @@ resources:
   - deployment.yaml
   - service.yaml
   - service-account.yaml
+  - role-binding.yaml
+  - webapp-token-secret.yaml
 # This is the base kustomization file for the web application.
 
 configMapGenerator:
@@ -19,6 +21,7 @@ secretGenerator:
       - DB_PASSWORD=changeme
       - API_KEY=changeme
     type: Opaque
-
+  
 transformers:
   - labels-transformer.yaml
+
