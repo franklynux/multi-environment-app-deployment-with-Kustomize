@@ -21,9 +21,15 @@ jobs:
         run: |
           echo "${{ secrets.KUBE_CONFIG_DATA }}" | base64 -d > /tmp/kubeconfig
           export KUBECONFIG=/tmp/kubeconfig
-          kubectl config use-context webapp-service-account@kubernetes
           kubectl config view --minify
+          
+      - name: Test cluster connection
+        run: |
+          export KUBECONFIG=/tmp/kubeconfig
+          kubectl cluster-info
           
       - name: Deploy to environment
         run: |
-          kustomize build overlays/dev | kubectl apply -f - --validate=false
+          export KUBECONFIG=/tmp/kubeconfig
+          kubectl apply -k base/
+          

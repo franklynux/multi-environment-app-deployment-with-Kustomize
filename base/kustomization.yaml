@@ -6,7 +6,6 @@ resources:
   - service.yaml
   - service-account.yaml
   - role-binding.yaml
-  - cluster-role-binding.yaml
   - webapp-token-secret.yaml
 # This is the base kustomization file for the web application.
 
