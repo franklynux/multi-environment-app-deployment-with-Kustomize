@@ -1,4 +1,4 @@
-# Multi-Environment Application Deployment with Kustomize
+# Implementing a Multi-Environment Application Deployment with Kustomize
 
 ## Table of Contents
 
@@ -23,7 +23,7 @@
    - [Deploying to Staging](#deploying-to-staging)
    - [Deploying to Production](#deploying-to-production)
    - [Verifying Deployments](#verifying-deployments)
-7. [CI/CD Pipeline](#cicd-pipeline)
+7. [CI/CD Pipeline](#ci-cd-pipeline)
    - [Setting Up GitHub Actions](#setting-up-github-actions)
    - [Pipeline Configuration](#pipeline-configuration)
    - [Testing the Pipeline](#testing-the-pipeline)
@@ -44,9 +44,9 @@
 
 Kustomize is a Kubernetes-native configuration management tool that allows you to customize application manifests without modifying the original YAML files. It provides a way to manage configurations for different environments (e.g., dev, staging, prod) using overlays and bases.
 
-The application deployed in this project is a simple Node.js web application that displays the day of the week. This app serves as a demonstration of multi-environment deployment using Kubernetes.
+The application deployed in this project is a simple Node.js web application that displays the day of the week. This app serves as a sample for multi-environment deployment using Kubernetes.
 
-![Application Screenshot](screenshots/application-screenshot.png)
+![Application Screenshot](images/Prod%20-%20webapp%20on%20browser.png)
 
 ### Key Concepts
 
@@ -88,10 +88,6 @@ The application deployed in this project is a simple Node.js web application tha
         - API_KEY=pleasechangeme
   ```
 
-![Transformers and Generators Screenshot](screenshots/transformers-generators.png)
-
-![Kustomize Workflow Diagram](screenshots/kustomize-workflow.png)
-
 ## Project Structure
 
 The project follows a standard Kustomize structure with base configurations and environment-specific overlays:
@@ -106,9 +102,7 @@ The project follows a standard Kustomize structure with base configurations and 
 └── .github/workflows/   # CI/CD pipeline definition
 ```
 
-![Project Structure Screenshot](screenshots/project-structure.png)
-
-![Directory Tree View](screenshots/directory-tree.png)
+![Project Structure Screenshot](images/Project%20structure.png)
 
 ## Prerequisites
 
@@ -119,14 +113,15 @@ Before starting, ensure you have the following:
 - eksctl installed
 - Git installed
 - Access to a GitHub account (for CI/CD setup)
-
-![Prerequisites Tools](screenshots/prerequisites-tools.png)
+- Basic understanding of Kubernetes concepts (pods, deployments, services, etc.)
+- Familiarity with YAML syntax and Kustomize concepts
 
 ## Setting Up the Environment
 
 ### Installing Required Tools
 
 1. **Install kubectl**:
+
    ```bash
    curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
    chmod +x kubectl
@@ -134,12 +129,11 @@ Before starting, ensure you have the following:
    ```
 
 2. **Install Kustomize**:
+
    ```bash
    curl -s "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh" | bash
    sudo mv kustomize /usr/local/bin/
    ```
-
-![Tools Installation](screenshots/tools-installation.png)
 
 ### Provisioning Kubernetes Cluster with eksctl
 
@@ -155,6 +149,8 @@ Before starting, ensure you have the following:
    ```bash
    eksctl create cluster --name kustomize-cluster --region us-west-2 --nodegroup-name standard-workers --node-type t3.medium --nodes 3
    ```
+   **Expected Output**:
+   ![Cluster Provisioning Screenshot](images/eksctl%20-%20create%20cluster.png)
 
 3. **Verify the cluster is running**:
 
@@ -162,22 +158,28 @@ Before starting, ensure you have the following:
    kubectl get nodes
    ```
 
+   **Expected Output**:
+   ![Node Verification Screenshot](images/kubectl%20-%20get%20nodes.png)
+
    You should see your nodes listed with status "Ready".
 
-![Cluster Provisioning Screenshot](screenshots/cluster-provisioning.png)
-
-![EKS Console View](screenshots/eks-console.png)
+   **EKS Console View**:
+   After the cluster is created, you can view it in the AWS EKS console. Navigate to the EKS service in the AWS Management Console, select your cluster, and check the status.
+   ![EKS Console View](images/EKS%20console%20-%20view%20cluster%20ready.png)
 
 ### Cloning the Repository
 
 1. **Clone the repository**:
 
    ```bash
-   git clone https://github.com/your-repo/kustomize-capstone.git
-   cd kustomize-capstone
+   git clone https://github.com/your-repo/multi-environment-app-deployment-with-kustomize.git
+   cd multi-environment-app-deployment-with-kustomize
    ```
 
-![Repository Clone](screenshots/repo-clone.png)
+   *Replace `your-repo` with the actual GitHub username or organization name.*
+
+   **Expected Output:**
+   ![Repository Clone](images/git%20clone%20repo.png)
 
 ## Understanding the Configuration
 
@@ -212,10 +214,10 @@ The `base/` directory contains the common Kubernetes resources shared across all
    - Dynamically creates configuration and secrets
    - Defines default environment variables
 
-![Base Deployment Screenshot](screenshots/base-deployment.png)
-![Base Service Screenshot](screenshots/base-service.png)
-![Base Labels Transformer Screenshot](screenshots/base-labels-transformer.png)
-![Base Kustomization File](screenshots/base-kustomization.png)
+   ![Base Deployment Screenshot](images/base_deployment.png)
+   ![Base Service Screenshot](images/base_service.png)
+   ![Base Labels Transformer Screenshot](images/base_labels_transformer.png)
+   ![Base Kustomization File](images/base_kustomization.png)
 
 ### Environment Overlays
 
@@ -234,9 +236,9 @@ The `overlays/dev/` directory customizes the base configuration for the developm
    - Adds `environment: dev` label
    - Adds other development-specific labels
 
-![Dev Patch Screenshot](screenshots/dev-patch.png)
-![Dev Labels Transformer Screenshot](screenshots/dev-labels-transformer.png)
-![Dev Kustomization File](screenshots/dev-kustomization.png)
+   ![Dev Patch Screenshot](images/dev_patch.png)
+   ![Dev Labels Transformer Screenshot](images/dev_labels_transformer.png)
+   ![Dev Kustomization File](images/dev_kustomization.png)
 
 #### Staging Environment
 
@@ -251,9 +253,9 @@ The `overlays/staging/` directory customizes the base configuration for the stag
    - Adds `environment: staging` label
    - Adds other staging-specific labels
 
-![Staging Patch Screenshot](screenshots/staging-patch.png)
-![Staging Labels Transformer Screenshot](screenshots/staging-labels-transformer.png)
-![Staging Kustomization File](screenshots/staging-kustomization.png)
+   ![Staging Patch Screenshot](images/staging_patch.png)
+   ![Staging Labels Transformer Screenshot](images/staging_labels_transformer.png)
+   ![Staging Kustomization File](images/staging_kustomization.png)
 
 #### Production Environment
 
@@ -268,15 +270,16 @@ The `overlays/prod/` directory customizes the base configuration for the product
    - Adds `environment: prod` label
    - Adds other production-specific labels
 
-![Prod Patch Screenshot](screenshots/prod-patch.png)
-![Prod Labels Transformer Screenshot](screenshots/prod-labels-transformer.png)
-![Prod Kustomization File](screenshots/prod-kustomization.png)
+   ![Prod Patch Screenshot](images/prod_patch.png)
+   ![Prod Labels Transformer Screenshot](images/prod_labels_transformer.png)
+   ![Prod Kustomization File](images/prod_kustomization.png)
 
 ### Service Account and RBAC
 
-A custom service account is created to provide a secure identity for the application pods and the CI/CD pipeline.
+A custom service account is created to provide a secure identity for the application pods and the CI/CD pipeline. This service account, along with appropriate Role-Based Access Control (RBAC) permissions, ensures secure access to the Kubernetes API and effective resource management.
 
 1. **Service Account (`base/service-account.yaml`)**:
+
    ```yaml
    apiVersion: v1
    kind: ServiceAccount
@@ -286,6 +289,7 @@ A custom service account is created to provide a secure identity for the applica
    ```
 
 2. **Role and Role Binding (`base/role-binding.yaml`)**:
+
    ```yaml
    apiVersion: rbac.authorization.k8s.io/v1
    kind: Role
@@ -314,119 +318,159 @@ A custom service account is created to provide a secure identity for the applica
 
 The role grants permissions to `get`, `list`, `watch`, `create`, `update`, and `delete` operations on `pods`, `configmaps`, and `secrets` resources within the `default` namespace.
 
-![Service Account and Role Binding Screenshot](screenshots/service-account-role-binding.png)
-![RBAC Diagram](screenshots/rbac-diagram.png)
+![Service Account and Role Binding Screenshot](images/service-account-role-binding.png)
+![RBAC Diagram](images/rbac-diagram.png)
 
 ## Deployment Guide
 
 ### Deploying to Development
 
 1. **Build and apply the development overlay**:
+
    ```bash
    kustomize build overlays/dev | kubectl apply -f -
    ```
 
 2. **Verify the deployment**:
+
    ```bash
    kubectl get deployments,pods,svc -l environment=dev
    ```
 
-![Dev Deployment Process](screenshots/dev-deployment.png)
-![Dev Resources](screenshots/dev-resources.png)
+   ![Dev Deployment Process](images/dev-deployment.png)
+   ![Dev Resources](images/dev-resources.png)
 
 ### Deploying to Staging
 
 1. **Build and apply the staging overlay**:
+
    ```bash
    kustomize build overlays/staging | kubectl apply -f -
    ```
 
 2. **Verify the deployment**:
+
    ```bash
    kubectl get deployments,pods,svc -l environment=staging
    ```
 
-![Staging Deployment Process](screenshots/staging-deployment.png)
-![Staging Resources](screenshots/staging-resources.png)
+   ![Staging Deployment Process](images/staging-deployment.png)
+   ![Staging Resources](images/staging-resources.png)
 
 ### Deploying to Production
 
 1. **Build and apply the production overlay**:
+
    ```bash
    kustomize build overlays/prod | kubectl apply -f -
    ```
 
 2. **Verify the deployment**:
+
    ```bash
    kubectl get deployments,pods,svc -l environment=prod
    ```
 
-![Prod Deployment Process](screenshots/prod-deployment.png)
-![Prod Resources](screenshots/prod-resources.png)
+   ![Prod Deployment Process](images/prod-deployment.png)
+   ![Prod Resources](images/prod-resources.png)
 
 ### Verifying Deployments
 
 1. **Get the LoadBalancer service endpoint**:
+
    ```bash
    kubectl get svc
    ```
+
    Look for the service with `TYPE` as `LoadBalancer` and note the `EXTERNAL-IP` or `EXTERNAL-DNS`.
 
 2. **Access the application**:
    Open a web browser and navigate to the `EXTERNAL-IP` or `EXTERNAL-DNS` obtained in the previous step.
 
 3. **Check pod logs**:
+
    ```bash
    kubectl logs pods/project-alpha-prod-7cfc67b888-ft6hg
    ```
 
-![Deployment Process Screenshot](screenshots/deployment-process.png)
-![Application Access](screenshots/application-access.png)
-![Pod Logs](screenshots/pod-logs.png)
+   ![Deployment Process Screenshot](images/deployment-process.png)
+   ![Application Access](images/application-access.png)
+   ![Pod Logs](images/pod-logs.png)
 
-## CI/CD Pipeline
+## CI-CD Pipeline
 
 ### Setting Up GitHub Actions
 
-1. **Use the existing service account for CI/CD**:
-   
-   Instead of creating a new service account, you can use the existing `webapp-service-account` defined in your base configuration:
-   
-   ```bash
-   # Apply the base configuration to ensure the service account exists
-   kubectl apply -f base/service-account.yaml
-   kubectl apply -f base/role-binding.yaml
+1. **Create the service account token secret**:
+
+   First, create a file named `webapp-token-secret.yaml` in the base directory:
+
+   ```yaml
+   apiVersion: v1
+   kind: Secret
+   metadata:
+     name: webapp-secret-token
+     annotations:
+       kubernetes.io/service-account.name: webapp-service-account
+   type: kubernetes.io/service-account-token
    ```
 
+   Then, add it to your base kustomization.yaml resources:
+
+   ```yaml
+   resources:
+     - deployment.yaml
+     - service.yaml
+     - service-account.yaml
+     - role-binding.yaml
+     - webapp-token-secret.yaml
+   ```
+
+   Apply the configuration to create the token:
+
+   ```bash
+   kubectl apply -f base/webapp-token-secret.yaml
+   ```
+
+    ![Service Account Token Secret](images/webapp-token-secret.png)
+
 2. **Get the service account token**:
+
    ```bash
    # For Linux/macOS
-   kubectl get secret $(kubectl get serviceaccount webapp-service-account -o jsonpath="{.secrets[0].name}") -o jsonpath="{.data.token}" | base64 --decode
+   kubectl get secret webapp-secret-token -o jsonpath="{.data.token}" | base64 --decode
    
    # For Windows PowerShell
-   kubectl get secret $(kubectl get serviceaccount webapp-service-account -o jsonpath="{.secrets[0].name}") -o jsonpath="{.data.token}" | ForEach-Object { [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String($_)) }
+   kubectl get secret webapp-secret-token -o jsonpath="{.data.token}" | ForEach-Object { [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String($_)) }
    ```
 
 3. **Get the cluster certificate**:
+
    ```bash
    # For Linux/macOS/Windows
-   kubectl get secret $(kubectl get serviceaccount webapp-service-account -o jsonpath="{.secrets[0].name}") -o jsonpath="{.data['ca\.crt']}"
+   kubectl get secret webapp-secret-token -o jsonpath="{.data['ca\.crt']}"
    ```
-
-   Note: If your existing role doesn't have sufficient permissions for CI/CD operations, you may need to update the role in `base/role-binding.yaml` to include additional resources and verbs.
-
-![GitHub Actions Setup](screenshots/github-actions-setup.png)
-![Service Account Creation](screenshots/service-account-creation.png)
 
 ### Pipeline Configuration
 
-1. **Create and replace your kubeconfig file with service account credentials**:
+1. **Add AWS credentials and EKS cluster name as GitHub secrets**:
+
+   - Go to your GitHub repository
+   - Navigate to Settings > Secrets and variables > Actions > New repository secret
+   - Add the following secrets:
+     - `AWS_ACCESS_KEY_ID`: Your AWS access key
+     - `AWS_SECRET_ACCESS_KEY`: Your AWS secret key
+     - `EKS_CLUSTER_NAME`: Your EKS cluster name (e.g., kustomize-app-cluster)
+
+     ![GitHub Secrets](images/GitHub%20-%20Secrets.png)
+
+2. **Create and replace your kubeconfig file with service account credentials**:
 
    ```bash
    # For Linux/macOS
-   CA_CERT=$(kubectl get secret $(kubectl get serviceaccount webapp-service-account -o jsonpath="{.secrets[0].name}") -o jsonpath="{.data['ca\.crt']}")
+   CA_CERT=$(kubectl get secret webapp-secret-token -o jsonpath="{.data['ca\.crt']}")
    SERVER=$(kubectl config view --minify -o jsonpath='{.clusters[0].cluster.server}')
-   TOKEN=$(kubectl get secret $(kubectl get serviceaccount webapp-service-account -o jsonpath="{.secrets[0].name}") -o jsonpath="{.data.token}" | base64 --decode)
+   TOKEN=$(kubectl get secret webapp-secret-token -o jsonpath="{.data.token}" | base64 --decode)
    
    # Create and replace kubeconfig
    cat > ~/.kube/config << EOF
@@ -448,11 +492,17 @@ The role grants permissions to `get`, `list`, `watch`, `create`, `update`, and `
      user:
        token: ${TOKEN}
    EOF
-   
+   ```
+
+   **Expected Output:**
+   The kubeconfig file will be created at `~/.kube/config` with the service account credentials.
+   ![Linux/macOS Kubeconfig Setup](images/custom%20kubeconfig%20output.png)
+
+   ```powershell
    # For Windows PowerShell
-   $CA_CERT = kubectl get secret $(kubectl get serviceaccount webapp-service-account -o jsonpath="{.secrets[0].name}") -o jsonpath="{.data['ca\.crt']}"
+   $CA_CERT = kubectl get secret webapp-secret-token -o jsonpath="{.data['ca\.crt']}"
    $SERVER = kubectl config view --minify -o jsonpath='{.clusters[0].cluster.server}'
-   $TOKEN = kubectl get secret $(kubectl get serviceaccount webapp-service-account -o jsonpath="{.secrets[0].name}") -o jsonpath="{.data.token}" | ForEach-Object { [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String($_)) }
+   $TOKEN = kubectl get secret webapp-secret-token -o jsonpath="{.data.token}" | ForEach-Object { [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String($_)) }
    
    # Create and replace kubeconfig
    $kubeConfigContent = @"
@@ -480,16 +530,15 @@ The role grants permissions to `get`, `list`, `watch`, `create`, `update`, and `
    
    ```
 
-2. **Create the workflow file**:
+3. **Create the workflow file**:
    The workflow file is located at `.github/workflows/deploy.yaml` and defines the CI/CD pipeline:
 
-![GitHub Secrets](screenshots/github-secrets.png)
-![Workflow File](screenshots/workflow-file.png)
+   ![Workflow File](images/workflow%20file.png)
 
 ### Testing the Pipeline
 
 1. **Make a change to the repository**:
-   - Modify a file in the any of the overlays e.g. in the `overlays/dev` directory, change the replicas in the `patch.yaml` file to 2.
+   - Modify a file in any of the overlays, e.g., in the `overlays/dev` directory, change the replicas in the `patch.yaml` file to 2.
    - Commit and push the changes
 
 2. **Monitor the GitHub Actions workflow**:
@@ -497,9 +546,9 @@ The role grants permissions to `get`, `list`, `watch`, `create`, `update`, and `
    - Watch the workflow execution
    - Check for successful deployment
 
-![CI/CD Workflow Screenshot](screenshots/github-actions-workflow.png)
-![Workflow Execution](screenshots/workflow-execution.png)
-![Deployment Success](screenshots/deployment-success.png)
+    ![CI/CD Workflow Screenshot](images/github-actions-workflow.png)
+    ![Workflow Execution](images/workflow-execution.png)
+    ![Deployment Success](images/deployment-success.png)
 
 ## Troubleshooting
 
@@ -523,8 +572,10 @@ The role grants permissions to `get`, `list`, `watch`, `create`, `update`, and `
    - Verify ConfigMaps exist: `kubectl get configmaps`
    - Check Secret existence: `kubectl get secrets`
    - Ensure they're mounted correctly in the pod: `kubectl describe pod <pod-name>`
-
-![Troubleshooting Pods](screenshots/troubleshooting-pods.png)
+5. **RBAC Issues**:
+   - Check service account permissions: `kubectl describe role webapp-role`
+   - Verify role binding: `kubectl describe rolebinding webapp-role-binding`
+   - Ensure the service account is correctly referenced in the deployment: `kubectl get deployment <deployment-name> -o yaml`
 
 ### GitHub Actions Issues
 
@@ -543,8 +594,6 @@ The role grants permissions to `get`, `list`, `watch`, `create`, `update`, and `
    - Check for syntax errors in YAML files
    - Ensure all referenced files exist in the repository
 
-![GitHub Actions Troubleshooting](screenshots/github-actions-troubleshooting.png)
-
 ### Kustomize Build Issues
 
 1. **Resource Not Found Errors**:
@@ -562,51 +611,62 @@ The role grants permissions to `get`, `list`, `watch`, `create`, `update`, and `
    - Check that fieldSpecs correctly target fields
    - Test transformers individually
 
-![Kustomize Build Issues](screenshots/kustomize-build-issues.png)
-
 ## Cleanup
 
 ### Removing Deployments
 
 1. **Delete individual environment deployments**:
+
    ```bash
+
    # Delete development environment
-   kustomize build overlays/dev | kubectl delete -f -
-   
+   kubectl delete -k overlays/dev
+
    # Delete staging environment
-   kustomize build overlays/staging | kubectl delete -f -
+   kubectl delete -k overlays/staging
    
    # Delete production environment
-   kustomize build overlays/prod | kubectl delete -f -
+   kubectl delete -k overlays/prod
+
+   # Delete base resources
+   kubectl delete -k base
+
+   # or optionally delete all resources with the label app=webapp
+   kubectl delete all -l app=webapp
    ```
 
 2. **Verify resources are removed**:
+
    ```bash
    kubectl get all -l app=webapp
    ```
 
+   **Expected Output**: No resources found
+   ![Removing Deployments](images/remove%20individual%20environ%20deployments.png)
+
+   **Verify Resources Removed**:
+   If the resources were successfully deleted, you should see no resources listed.
+   ![Verify Resources Removed](images/app%20resources%20deleted.png)
+
 ### Deleting the Cluster
 
 1. **Delete the EKS cluster**:
+
    ```bash
-   eksctl delete cluster --name kustomize-cluster --region us-west-2
+   eksctl delete cluster --name kustomize-app-cluster --region us-east-1
    ```
+
+   **Expected Output**: The command will output the progress of the deletion process, and you should see a confirmation message once the cluster is deleted.
+   ![Cluster Cleanup](images/cluster-cleanup.png)
 
 2. **Verify cluster deletion**:
+
    ```bash
-   aws eks list-clusters --region us-west-2
+   aws eks list-clusters --region us-east-1
    ```
 
-3. **Clean up local files**:
-   ```bash
-   # For Linux/macOS
-   rm -f /tmp/kubeconfig
+   **Expected Output**: The command should return an empty list if the cluster was successfully deleted.
    
-   # For Windows PowerShell
-   Remove-Item -Path "$env:TEMP\kubeconfig" -Force -ErrorAction SilentlyContinue
-   ```
-
-![Cluster Cleanup](screenshots/cluster-cleanup.png)
 
 ## References and Resources
 
