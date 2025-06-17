@@ -37,4 +37,4 @@ jobs:
 
       - name: Deploy to Kubernetes
         run: |
-          kubectl apply -k ./overlays/dev/ 
+          kubectl apply -k ./overlays/dev/ # Change to the appropriate overlay (dev, staging, prod)

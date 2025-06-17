@@ -420,18 +420,23 @@ The role grants permissions to `get`, `list`, `watch`, `create`, `update`, and `
 
 ### Pipeline Configuration
 
-1. **Create a kubeconfig file using the service account token and certificate**:
+1. **Create and replace your kubeconfig file with service account credentials**:
 
    ```bash
-   # For Linux/macOS - Create a temporary kubeconfig file in /tmp (best practice)
-   cat > /tmp/kubeconfig << EOF
+   # For Linux/macOS
+   CA_CERT=$(kubectl get secret $(kubectl get serviceaccount webapp-service-account -o jsonpath="{.secrets[0].name}") -o jsonpath="{.data['ca\.crt']}")
+   SERVER=$(kubectl config view --minify -o jsonpath='{.clusters[0].cluster.server}')
+   TOKEN=$(kubectl get secret $(kubectl get serviceaccount webapp-service-account -o jsonpath="{.secrets[0].name}") -o jsonpath="{.data.token}" | base64 --decode)
+   
+   # Create and replace kubeconfig
+   cat > ~/.kube/config << EOF
    apiVersion: v1
    kind: Config
    clusters:
    - name: kubernetes
      cluster:
-       certificate-authority-data: $(kubectl get secret $(kubectl get serviceaccount webapp-service-account -o jsonpath="{.secrets[0].name}") -o jsonpath="{.data['ca\.crt']}")
-       server: $(kubectl config view --minify -o jsonpath='{.clusters[0].cluster.server}')
+       certificate-authority-data: ${CA_CERT}
+       server: ${SERVER}
    contexts:
    - name: webapp-service-account@kubernetes
      context:
@@ -441,18 +446,23 @@ The role grants permissions to `get`, `list`, `watch`, `create`, `update`, and `
    users:
    - name: webapp-service-account
      user:
-       token: $(kubectl get secret $(kubectl get serviceaccount webapp-service-account -o jsonpath="{.secrets[0].name}") -o jsonpath="{.data.token}" | base64 --decode)
+       token: ${TOKEN}
    EOF
    
-   # For Windows PowerShell - Create a temporary kubeconfig file in %TEMP% (best practice)
+   # For Windows PowerShell
+   $CA_CERT = kubectl get secret $(kubectl get serviceaccount webapp-service-account -o jsonpath="{.secrets[0].name}") -o jsonpath="{.data['ca\.crt']}"
+   $SERVER = kubectl config view --minify -o jsonpath='{.clusters[0].cluster.server}'
+   $TOKEN = kubectl get secret $(kubectl get serviceaccount webapp-service-account -o jsonpath="{.secrets[0].name}") -o jsonpath="{.data.token}" | ForEach-Object { [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String($_)) }
+   
+   # Create and replace kubeconfig
    $kubeConfigContent = @"
    apiVersion: v1
    kind: Config
    clusters:
    - name: kubernetes
      cluster:
-       certificate-authority-data: $(kubectl get secret $(kubectl get serviceaccount webapp-service-account -o jsonpath="{.secrets[0].name}") -o jsonpath="{.data['ca\.crt']}")
-       server: $(kubectl config view --minify -o jsonpath='{.clusters[0].cluster.server}')
+       certificate-authority-data: ${CA_CERT}
+       server: ${SERVER}
    contexts:
    - name: webapp-service-account@kubernetes
      context:
@@ -462,59 +472,16 @@ The role grants permissions to `get`, `list`, `watch`, `create`, `update`, and `
    users:
    - name: webapp-service-account
      user:
-       token: $(kubectl get secret $(kubectl get serviceaccount webapp-service-account -o jsonpath="{.secrets[0].name}") -o jsonpath="{.data.token}" | ForEach-Object { [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String($_)) })
+       token: ${TOKEN}
    "@
    
-   $kubeConfigContent | Out-File "$env:TEMP\kubeconfig" -Encoding utf8
+   New-Item -Path "$env:USERPROFILE\.kube" -ItemType Directory -Force
+   $kubeConfigContent | Out-File "$env:USERPROFILE\.kube\config" -Encoding utf8 -Force
+   
    ```
 
-2. **Base64 encode the kubeconfig file**:
-
-   ```bash
-   # For Linux/macOS
-   KUBE_CONFIG_DATA=$(cat /tmp/kubeconfig | base64 -w 0)
-   
-   # For Windows PowerShell
-   $KUBE_CONFIG_DATA = [Convert]::ToBase64String([System.Text.Encoding]::UTF8.GetBytes((Get-Content -Raw "$env:TEMP\kubeconfig")))
-   ```
-
-3. **Add GitHub repository secrets**:
-   - Go to your GitHub repository
-   - Navigate to Settings > Secrets > New repository secret
-   - Add a secret named `KUBE_CONFIG_DATA` with the base64-encoded value from the previous step
-
-4. **Create the workflow file**:
-   The workflow file is located at `.github/workflows/deploy.yml` and defines the CI/CD pipeline:
-
-   ```yaml
-   # .github/workflows/deploy.yml
-   name: Deploy to Kubernetes
-   
-   on:
-     push:
-       branches: [main]
-   
-   jobs:
-     deploy:
-       runs-on: ubuntu-latest
-       steps:
-         - uses: actions/checkout@v2
-         
-         - name: Set up Kustomize
-           uses: imranismail/setup-kustomize@v1
-           
-         - name: Set up kubectl
-           uses: azure/setup-kubectl@v1
-           
-         - name: Configure kubectl
-           run: |
-             echo "${{ secrets.KUBE_CONFIG_DATA }}" | base64 -d > /tmp/kubeconfig
-             export KUBECONFIG=/tmp/kubeconfig
-             
-         - name: Deploy to environment
-           run: |
-             kustomize build overlays/dev | kubectl apply -f -
-   ```
+2. **Create the workflow file**:
+   The workflow file is located at `.github/workflows/deploy.yaml` and defines the CI/CD pipeline:
 
 ![GitHub Secrets](screenshots/github-secrets.png)
 ![Workflow File](screenshots/workflow-file.png)
@@ -522,7 +489,7 @@ The role grants permissions to `get`, `list`, `watch`, `create`, `update`, and `
 ### Testing the Pipeline
 
 1. **Make a change to the repository**:
-   - Modify a file in the repository
+   - Modify a file in the any of the overlays e.g. in the `overlays/dev` directory, change the replicas in the `patch.yaml` file to 2.
    - Commit and push the changes
 
 2. **Monitor the GitHub Actions workflow**:
@@ -562,9 +529,9 @@ The role grants permissions to `get`, `list`, `watch`, `create`, `update`, and `
 ### GitHub Actions Issues
 
 1. **Authentication Failures**:
-   - Verify the `KUBE_CONFIG_DATA` secret is correctly set
-   - Check that the service account token is valid
-   - Ensure the service account has appropriate permissions
+   - Verify the AWS credentials are correctly set
+   - Check that the EKS cluster name is correct
+   - Ensure the IAM user has appropriate permissions for EKS
 
 2. **Workflow Failures**:
    - Check the GitHub Actions logs for specific error messages
