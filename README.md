@@ -23,7 +23,7 @@
    - [Deploying to Staging](#deploying-to-staging)
    - [Deploying to Production](#deploying-to-production)
    - [Verifying Deployments](#verifying-deployments)
-7. [CI/CD Pipeline](#ci-cd-pipeline)
+7. [CI/CD Pipeline](#cicd-pipeline)
    - [Setting Up GitHub Actions](#setting-up-github-actions)
    - [Pipeline Configuration](#pipeline-configuration)
    - [Testing the Pipeline](#testing-the-pipeline)
@@ -149,6 +149,7 @@ Before starting, ensure you have the following:
    ```bash
    eksctl create cluster --name kustomize-cluster --region us-west-2 --nodegroup-name standard-workers --node-type t3.medium --nodes 3
    ```
+
    **Expected Output**:
    ![Cluster Provisioning Screenshot](images/eksctl%20-%20create%20cluster.png)
 
@@ -318,8 +319,9 @@ A custom service account is created to provide a secure identity for the applica
 
 The role grants permissions to `get`, `list`, `watch`, `create`, `update`, and `delete` operations on `pods`, `configmaps`, and `secrets` resources within the `default` namespace.
 
-![Service Account and Role Binding Screenshot](images/service-account-role-binding.png)
-![RBAC Diagram](images/rbac-diagram.png)
+**Service Account and Role Binding Screenshots**:
+![Service Account Screenshot](images/service-account.png)
+![Role Binding Screenshot](images/role-binding%20config.png)
 
 ## Deployment Guide
 
@@ -328,8 +330,11 @@ The role grants permissions to `get`, `list`, `watch`, `create`, `update`, and `
 1. **Build and apply the development overlay**:
 
    ```bash
-   kustomize build overlays/dev | kubectl apply -f -
+   kubectl apply -k overlays/dev
    ```
+
+   **Expected Output**: You should see the deployment, pods, and service being created.
+   ![Dev Deployment Process](images/dev%20-%20deploy%20process.png)
 
 2. **Verify the deployment**:
 
@@ -337,32 +342,36 @@ The role grants permissions to `get`, `list`, `watch`, `create`, `update`, and `
    kubectl get deployments,pods,svc -l environment=dev
    ```
 
-   ![Dev Deployment Process](images/dev-deployment.png)
-   ![Dev Resources](images/dev-resources.png)
+   **Expected Output**: You should see the deployment, pods, and service created with the label `environment=dev`.
+
+   ![Dev Resources](images/dev%20-%20resources%20created.png)
 
 ### Deploying to Staging
 
 1. **Build and apply the staging overlay**:
 
    ```bash
-   kustomize build overlays/staging | kubectl apply -f -
+   kubectl apply -k overlays/staging
    ```
+
+   **Expected Output**: 
+   ![Staging Deployment Process](images/staging%20-%20deploy%20process.png)
 
 2. **Verify the deployment**:
 
    ```bash
    kubectl get deployments,pods,svc -l environment=staging
    ```
+   **Expected Output**: 
 
-   ![Staging Deployment Process](images/staging-deployment.png)
-   ![Staging Resources](images/staging-resources.png)
+   ![Staging Resources](images/staging%20-%20resources%20created.png)
 
 ### Deploying to Production
 
 1. **Build and apply the production overlay**:
 
    ```bash
-   kustomize build overlays/prod | kubectl apply -f -
+   kubectl apply -k overlays/prod
    ```
 
 2. **Verify the deployment**:
@@ -371,8 +380,8 @@ The role grants permissions to `get`, `list`, `watch`, `create`, `update`, and `
    kubectl get deployments,pods,svc -l environment=prod
    ```
 
-   ![Prod Deployment Process](images/prod-deployment.png)
-   ![Prod Resources](images/prod-resources.png)
+   **Expected Output**: 
+   ![Prod Deployment Process & Resources Created](images/prod%20-%20deploy%20process%20&%20resources%20created.png)
 
 ### Verifying Deployments
 
@@ -384,8 +393,14 @@ The role grants permissions to `get`, `list`, `watch`, `create`, `update`, and `
 
    Look for the service with `TYPE` as `LoadBalancer` and note the `EXTERNAL-IP` or `EXTERNAL-DNS`.
 
+    **Expected Output**: You should see a service named `webapp-service` with a type of `LoadBalancer`.
+   ![Service with type LoadBalancer](images/kubectl%20-%20get%20services.png)
+
 2. **Access the application**:
    Open a web browser and navigate to the `EXTERNAL-IP` or `EXTERNAL-DNS` obtained in the previous step.
+
+   **Expected Output**: You should see the web application displaying the current day of the week.
+   ![Application Access](images/Prod%20-%20webapp%20on%20browser.png)
 
 3. **Check pod logs**:
 
@@ -393,11 +408,12 @@ The role grants permissions to `get`, `list`, `watch`, `create`, `update`, and `
    kubectl logs pods/project-alpha-prod-7cfc67b888-ft6hg
    ```
 
-   ![Deployment Process Screenshot](images/deployment-process.png)
-   ![Application Access](images/application-access.png)
-   ![Pod Logs](images/pod-logs.png)
+   Replace `project-alpha-prod-7cfc67b888-ft6hg` with the actual pod name.
 
-## CI-CD Pipeline
+   **Expected Output**: You should see logs indicating the application is running and serving requests.
+   ![Pod Logs](images/prod%20-%20pod%20logs.png)
+
+## CI/CD Pipeline
 
 ### Setting Up GitHub Actions
 
@@ -466,6 +482,10 @@ The role grants permissions to `get`, `list`, `watch`, `create`, `update`, and `
 
 2. **Create and replace your kubeconfig file with service account credentials**:
 
+   You can create a kubeconfig file that uses the service account token for authentication. This allows the GitHub Actions workflow to interact with your EKS cluster securely.
+
+   *Use the following script to create the kubeconfig file:*
+
    ```bash
    # For Linux/macOS
    CA_CERT=$(kubectl get secret webapp-secret-token -o jsonpath="{.data['ca\.crt']}")
@@ -497,6 +517,8 @@ The role grants permissions to `get`, `list`, `watch`, `create`, `update`, and `
    **Expected Output:**
    The kubeconfig file will be created at `~/.kube/config` with the service account credentials.
    ![Linux/macOS Kubeconfig Setup](images/custom%20kubeconfig%20output.png)
+
+   *For Windows PowerShell, you can use the following script to create the kubeconfig file:*
 
    ```powershell
    # For Windows PowerShell
@@ -538,17 +560,27 @@ The role grants permissions to `get`, `list`, `watch`, `create`, `update`, and `
 ### Testing the Pipeline
 
 1. **Make a change to the repository**:
-   - Modify a file in any of the overlays, e.g., in the `overlays/dev` directory, change the replicas in the `patch.yaml` file to 2.
+   - Modify a file in the any of the overlays e.g. in the `overlays/dev` directory, change the replicas in the `patch.yaml` file to 2.
+   
+   **Initial dev replica number**:
+   ![Before Change in dev replicas](images/dev%20overlay%20-%20showing%201%20replica.png)
+   **Example Change**:
+     ![Change in dev replicas](images/change%20in%20dev%20overlay%20to%20push.png)
    - Commit and push the changes
+
 
 2. **Monitor the GitHub Actions workflow**:
    - Go to the Actions tab in your GitHub repository
    - Watch the workflow execution
    - Check for successful deployment
+    
+    **Expected Output**: The workflow should run successfully, applying the changes to the development environment.
+    ![CI/CD Workflow Execution](images/
+    deploy%20execution%20in%20progress.png)
 
-    ![CI/CD Workflow Screenshot](images/github-actions-workflow.png)
-    ![Workflow Execution](images/workflow-execution.png)
-    ![Deployment Success](images/deployment-success.png)
+    **Verify the deployment in the development environment**:
+    ![Deployment Success](images/deployment%20successful.png)
+    ![Change in dev replicas](images/updated%20dev%20replica%20pods.png)
 
 ## Troubleshooting
 
@@ -657,7 +689,7 @@ The role grants permissions to `get`, `list`, `watch`, `create`, `update`, and `
    ```
 
    **Expected Output**: The command will output the progress of the deletion process, and you should see a confirmation message once the cluster is deleted.
-   ![Cluster Cleanup](images/cluster-cleanup.png)
+   ![Cluster Cleanup](images/eksctl%20-%20delete%20cluster.png)
 
 2. **Verify cluster deletion**:
 
@@ -666,7 +698,7 @@ The role grants permissions to `get`, `list`, `watch`, `create`, `update`, and `
    ```
 
    **Expected Output**: The command should return an empty list if the cluster was successfully deleted.
-   
+   ![Verify Cluster Deletion](images/verify%20cluster%20deleted.png)
 
 ## References and Resources
 
